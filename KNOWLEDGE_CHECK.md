@@ -14,7 +14,7 @@ Suppose your instance is running and has a public IP address, but `ssh` cannot c
 
 **Your answer:** Which path did you take in the console (service → page → tab)?
 
-...
+EC2 → Security Groups (under Network & Security in the left menu) → `launch-wizard-1` → Inbound rules tab. This tab lists the connections the group lets in; mine has one rule allowing SSH on TCP port 22 from `0.0.0.0/0`, so if that rule were missing or limited to a different IP, `ssh` would not get through.
 
 ## 2. Lambda: why didn't my function run?
 
@@ -26,7 +26,7 @@ Suppose you uploaded a new book to your bucket, but several minutes later MongoD
 
 **Your answer:** Which path did you take in the console (service → page → tab)?
 
-...
+Lambda → Functions → `book-analyzer-dev-analyze_new_book` → Configuration tab → Triggers. It shows one S3 trigger on bucket `public-eax9zh` for `s3:ObjectCreated:*` events with suffix `.txt`, so if the trigger were missing, pointed at the wrong bucket, or the file did not end in `.txt`, the function would never start.
 
 ## 3. Lambda: where do I find the error?
 
@@ -38,7 +38,7 @@ Suppose the function did start, but MongoDB still has no document for the book. 
 
 **Your answer:** Which path did you take in the console (service → page → tab)?
 
-...
+CloudWatch → Log Management → log group `/aws/lambda/book-analyzer-dev-analyze_new_book` → the log stream for the run (I can also get there from Lambda → the function → Monitor tab → View CloudWatch logs). The log events show the line `pg74.txt: 74383 words`, and if the function had crashed, the error and traceback would be in these same log events.
 
 ## 4. EC2 or Lambda: a backlog or new uploads?
 
@@ -54,4 +54,6 @@ For comparison, typical times in this lab:
 
 **Your answer:**
 
-...
+**Case A (backlog): EC2.** The 5,000 books are already in the bucket, so the S3 trigger would never fire for them, and one EC2 instance would finish them in about 17 minutes (20 seconds per 100 books) plus a few minutes of start-up, then I terminate it so it stops costing money.
+
+**Case B (new uploads): Lambda.** Each book takes about 2 seconds even with a cold start, which is well under the one-minute goal, and I only pay for those few seconds; an EC2 instance would have to run all day waiting between a few random uploads, and starting one per upload takes a few minutes, which misses the deadline.
